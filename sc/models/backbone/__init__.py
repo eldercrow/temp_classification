@@ -1,19 +1,11 @@
-# Copyright (c) SenseTime. All Rights Reserved.
+import torchvision.models as models
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+__all__ = ['get_backbone']
 
-from sc.models.backbone.alexnet import alexnetlegacy, alexnet
-from sc.models.backbone.mobilenetv2 import mobilenetv2
-from sc.models.backbone.resnet import resnet18, resnet34, resnet50
-
-BACKBONES = {
-              'mobilenetv2': mobilenetv2,
-              'resnet18': resnet18,
-            }
-
+BACKBONES = sorted(
+    name for name in models.__dict__
+    if name.islower() and not name.startswith("__") and callable(models.__dict__[name])
+)
 
 def get_backbone(name, **kwargs):
     return BACKBONES[name](**kwargs)

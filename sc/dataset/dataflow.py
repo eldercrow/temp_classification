@@ -12,7 +12,6 @@ from dataflow.utils.argtools import log_once
 from sc.dataset.dataset import TRDataset
 from sc.dataset.augmentation import (
         ShiftScaleAugmentor, ResizeAugmentor, ColorJitterAugmentor)
-from sc.config import cfg
 
 from torch.utils.data import IterableDataset
 
@@ -44,22 +43,22 @@ class TrainingDataPreprocessor:
     """
     def __init__(self, cfg):
         self.cfg = cfg
-        pixel_mean = np.array(self.cfg.PREPROC.PIXEL_MEAN[::-1])
+        pixel_mean = np.array(cfg.PIXEL_MEAN[::-1])
         # augmentations:
         #   shift, scale, color, flip
         augmentors = [
             imgaug.RandomChooseAug([
                 imgaug.Identity(),
-                imgaug.Rotation(self.cfg.DATASET.AUG.ROTATE,
+                imgaug.Rotation(cfg.AUG.ROTATE,
                                 (0.499, 0.501),
                                 border_value=pixel_mean),
-                imgaug.RotationAndCropValid(self.cfg.DATASET.AUG.ROTATE)
+                imgaug.RotationAndCropValid(cfg.AUG.ROTATE)
             ]),
             imgaug.RandomChooseAug([
-                (imgaug.Resize(self.cfg.TRAIN.SIZE), 0.25),
-                (ShiftScaleAugmentor(self.cfg.DATASET.AUG.SCALE,
-                                     self.cfg.DATASET.AUG.ASPECT,
-                                     self.cfg.TRAIN.SIZE,
+                (imgaug.Resize(cfg.IMAGE_HW), 0.25),
+                (ShiftScaleAugmentor(cfg.AUG.SCALE,
+                                     cfg.AUG.ASPECT,
+                                     cfg.IMAGE_HW,
                                      pixel_mean
                                      ), 0.75)
             ]),
@@ -91,7 +90,7 @@ class TrainingDataPreprocessor:
         r_img = tfms.apply_image(image)
 
         r_img = np.transpose(r_img, (2, 0, 1)).astype(np.float32)
-        r_img -= np.array(cfg.PREPROC.PIXEL_MEAN[::-1]).reshape((3, 1, 1))
+        r_img -= np.array(cfg.PIXEL_MEAN[::-1]).reshape((3, 1, 1))
 
         ret = { \
                 'image': r_img,
@@ -101,30 +100,31 @@ class TrainingDataPreprocessor:
         return ret
 
 
-def get_train_dataflow():
+def get_train_dataflow(cfg):
     '''
+    cfg: preprocessing config
     training dataflow with data augmentation.
     '''
     ds = TRDataset()
     train_preproc = TrainingDataPreprocessor(cfg)
 
-    if cfg.TRAIN.NUM_WORKERS == 1:
+    if cfg.NUM_WORKERS == 1:
         ds = MapData(ds, train_preproc)
     else:
-        ds = MultiProcessMapDataZMQ(ds, cfg.TRAIN.NUM_WORKERS, train_preproc)
-    ds = BatchData(ds, cfg.TRAIN.BATCH_SIZE)
+        ds = MultiProcessMapDataZMQ(ds, cfg.NUM_WORKERS, train_preproc)
+    ds = BatchData(ds, cfg.BATCH_SIZE)
     return TPIterableDataset(ds)
 
 
-def get_eval_dataflow():
+def get_eval_dataflow(cfg):
     '''
     evaluation dataflow with crop-resize-batch
     '''
     ds = TRDataset(shuffle=False)
-    sz = cfg.EVAL.SIZE
+    hw = cfg.IMAGE_HW
     augmentors = [
-            imgaug.ResizeShortestEdge(sz+32, interp=cv2.INTER_LINEAR),
-            imgaug.CenterCrop((sz, sz)),
+            imgaug.ResizeShortestEdge(hw[1]+32, interp=cv2.INTER_LINEAR),
+            imgaug.CenterCrop(hw),
         ]
     aug = imgaug.AugmentorList(augmentors)
 
@@ -134,15 +134,15 @@ def get_eval_dataflow():
         im = cv2.imread(fname, cv2.IMREAD_COLOR)
         im = aug.augment(im)
         im = np.transpose(im, (2, 0, 1)).astype(np.float32)
-        im -= np.array(cfg.PREPROC.PIXEL_MEAN[::-1]).reshape((3, 1, 1))
+        im -= np.array(cfg.PIXEL_MEAN[::-1]).reshape((3, 1, 1))
         return { 'image': im, 'label': cls }
     #
 
-    if cfg.EVAL.NUM_WORKERS == 1:
+    if cfg.EVAL_NUM_WORKERS == 1:
         ds = MapData(ds, mapf)
     else:
-        ds = MultiThreadMapData(ds, cfg.EVAL.NUM_WORKERS, mapf, buffer_size=2000, strict=True)
-    ds = BatchData(ds, cfg.EVAL.BATCH_SIZE, remainder=True)
-    if cfg.EVAL.NUM_WORKERS > 1:
+        ds = MultiThreadMapData(ds, cfg.EVAL_NUM_WORKERS, mapf, buffer_size=2000, strict=True)
+    ds = BatchData(ds, cfg.EVAL_BATCH_SIZE, remainder=True)
+    if cfg.EVAL_NUM_WORKERS > 1:
         ds = MultiProcessRunnerZMQ(ds, 1)
     return TPIterableDataset(ds)

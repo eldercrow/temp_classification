@@ -9,44 +9,37 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from sc.config import cfg
+# from sc.config import cfg
 # from sc.models.loss import structure_tensor_loss, l1_loss, bce_loss
 from sc.models.backbone import get_backbone
-from sc.models.neck.tr_neck import TRNeck
-from sc.models.head.tr_head import TRHead
 
 
 class ModelBuilder(nn.Module):
-    def __init__(self):
+    def __init__(self, cfg):
         super(ModelBuilder, self).__init__()
 
         # build backbone
-        self.backbone = get_backbone(cfg.BACKBONE.TYPE,
+        self.backbone = get_backbone(cfg.BACKBONE.NAME,
                                      **cfg.BACKBONE.KWARGS)
-        # build non-local necks
-        self.neck = TRNeck(**cfg.NECK.KWARGS)
         # build output head
-        self.head = TRHead(**cfg.HEAD.KWARGS)
+        self.head = nn.Linear(1000, cfg.NUM_CLASSES, bias=True)
 
     def classify(self, x):
         # get feature
         feat = self.backbone(x)
-        neck = self.neck(feat)
-        head = self.head(neck)
+        head = self.head(feat)
         return F.softmax(head, dim=-1)
 
     def forward(self, data):
         """ only used in training
         """
-        image = data['image'].cuda()
-        label = data['label'].long().cuda()
+        images, labels = data['image'], data['label']
 
         # get feature
-        feat = self.backbone(image)
-        neck = self.neck(feat)
-        head = self.head(neck)
+        feat = self.backbone(images)
+        head = self.head(feat)
 
-        loss = F.cross_entropy(head, label)
+        loss = F.cross_entropy(head, labels)
 
         outputs = {}
         outputs['total_loss'] = loss

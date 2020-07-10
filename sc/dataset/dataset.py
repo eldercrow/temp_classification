@@ -91,7 +91,7 @@ class SubDataset(object):
 
 class TRDataset(RNGDataFlow):
     '''
-    Datasets for geometric parsing.
+    Dataset class that merges multiple sub datasets.
     '''
     def __init__(self, shuffle=True):
         '''

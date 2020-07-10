@@ -13,14 +13,14 @@ class AffineTransform(Transform):
         if img.ndim == 2:
             img = np.stack([img, img, img], axis=2)
 
-        a = (self.out_wh[0]) / (self.roi[2] - self.roi[0])
-        b = (self.out_wh[1]) / (self.roi[3] - self.roi[1])
+        a = (self.out_hw[1]) / (self.roi[2] - self.roi[0])
+        b = (self.out_hw[0]) / (self.roi[3] - self.roi[1])
         c = -a * (self.roi[0] - 0.0)
         d = -b * (self.roi[1] - 0.0)
         self.mapping = np.array([[a, 0, c],
                                  [0, b, d]]).astype(np.float)
         crop = cv2.warpAffine(img, self.mapping,
-                              self.out_wh,
+                              (self.out_hw[1], self.out_hw[0]),
                               borderMode=cv2.BORDER_CONSTANT,
                               borderValue=self.mean_rgbgr)
         return crop
@@ -41,7 +41,7 @@ class ShiftScaleAugmentor(ImageAugmentor):
     def __init__(self,
                  scale_exp,
                  aspect_exp,
-                 out_size,
+                 out_hw,
                  mean_rgbgr=np.array([127, 127, 127])):
         """
         1. Create a box, [x0, y0, x1, y1] = [0, 0, ww, hh]
@@ -100,7 +100,7 @@ class ShiftScaleAugmentor(ImageAugmentor):
 
         roi = [x0, y0, x0+ww, y0+hh]
         # roi = [cx - ww/2.0, cy - hh/2.0, cx + ww/2.0, cy + hh/2.0]
-        return AffineTransform(roi, (self.out_size, self.out_size), self.mean_rgbgr)
+        return AffineTransform(roi, self.out_hw, self.mean_rgbgr)
 
 
 class ResizeAugmentor(ImageAugmentor):
