@@ -5,7 +5,7 @@ import pickle
 from dataflow.dataflow import *
 from dataflow.utils import logger
 # from dataflow.dataflow.utils import *
-from sc.config import cfg
+# from sc.config import cfg
 
 
 class SubDataset(object):
@@ -93,7 +93,7 @@ class TRDataset(RNGDataFlow):
     '''
     Dataset class that merges multiple sub datasets.
     '''
-    def __init__(self, shuffle=True):
+    def __init__(self, cfg, shuffle=True):
         '''
         Get and merge all sub datasets
         '''
@@ -103,8 +103,8 @@ class TRDataset(RNGDataFlow):
         # start = 0
         # self.num = 0
         # self.all_nums = []
-        for name_domain in cfg.DATASET.NAME_DOMAINS:
-            subdata_cfg = getattr(cfg.DATASET, name_domain)
+        for name_domain in cfg.NAME_DOMAINS:
+            subdata_cfg = getattr(cfg, name_domain)
             sub_dataset = SubDataset(
                     name_domain,
                     os.path.expanduser(subdata_cfg.ROOT),

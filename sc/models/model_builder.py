@@ -42,5 +42,5 @@ class ModelBuilder(nn.Module):
         loss = F.cross_entropy(head, labels)
 
         outputs = {}
-        outputs['total_loss'] = loss
+        outputs['loss'] = loss
         return outputs

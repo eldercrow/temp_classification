@@ -1,13 +1,17 @@
 import os
 import multiprocessing
 
+from collections import OrderedDict
+
 import torch
 import torch.optim as optim
+import torch.nn.functional as F
 import torch.optim.lr_scheduler as lr_scheduler
 from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
 
+from sc.dataset.dataset import TRDataset
 # from sc.config import cfg
 from sc.dataset.dataflow import get_train_dataflow, get_eval_dataflow
 from sc.models.model_builder import ModelBuilder
@@ -33,8 +37,8 @@ class ClassficationLearner(pl.LightningModule):
         '''
         batch: dict of {'image', 'label'}
         '''
-        images, labels = batch['image'], batch['label']
-        loss_dict = self(images)
+        # images, labels = batch['image'], batch['label']
+        loss_dict = self(batch)
         return loss_dict
 
     def configure_optimizers(self):
@@ -43,7 +47,7 @@ class ClassficationLearner(pl.LightningModule):
         '''
         cfg_opt = self.cfg.TRAIN.OPTIMIZER
         cfg_lr = self.cfg.TRAIN.LR_SCHEDULER
-        optimizer = getattr(optim, cfg_opt.NAME)(**cfg_opt.KWARGS)
+        optimizer = getattr(optim, cfg_opt.NAME)(self.parameters(), **cfg_opt.KWARGS)
         scheduler = getattr(lr_scheduler, cfg_lr.NAME)(optimizer, **cfg_lr.KWARGS)
         # optimizer = optim.SGD(
         #     self.parameters(),
@@ -59,9 +63,9 @@ class ClassficationLearner(pl.LightningModule):
         Process a validation batch and compute accuracies.
         '''
         images, labels = batch['image'], batch['label']
-        output = self.model.predict(images)
+        output = self.model.classify(images)
         loss_val = F.cross_entropy(output, labels)
-        acc1 = self.__accuracy(output, target, topk=(1,))[0]
+        acc1 = self.__accuracy(output, labels, topk=(1,))[0]
 
         output = OrderedDict({
             'val_loss': loss_val,
@@ -113,13 +117,15 @@ class ClassficationLearner(pl.LightningModule):
     def train_dataloader(self):
         '''
         '''
-        train_dataset = get_train_dataflow(self.cfg.PREPROC)
-        train_loader = DataLoader(train_dataset, batch_size=None, batch_sampler=none, sampler=None)
+        dataset = TRDataset(self.cfg.DATASET.TRAIN)
+        train_df = get_train_dataflow(dataset, self.cfg.PREPROC)
+        train_loader = DataLoader(train_df, batch_size=None, batch_sampler=None, sampler=None)
         return train_loader
 
     def val_dataloader(self):
         '''
         '''
-        val_dataset = get_eval_dataflow(self.cfg.PREPROC)
-        val_loader = DataLoader(val_dataset, batch_size=None, batch_sampler=none, sampler=None)
+        dataset = TRDataset(self.cfg.DATASET.EVAL, shuffle=False)
+        val_df = get_eval_dataflow(dataset, self.cfg.PREPROC)
+        val_loader = DataLoader(val_df, batch_size=None, batch_sampler=None, sampler=None)
         return val_loader

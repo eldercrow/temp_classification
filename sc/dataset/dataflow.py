@@ -9,7 +9,7 @@ from dataflow.dataflow import (
         imgaug, BatchData, MultiProcessMapDataZMQ, MapData, MultiThreadMapData, MultiProcessRunnerZMQ)
 from dataflow.utils.argtools import log_once
 # from tensorpack.utils import logger
-from sc.dataset.dataset import TRDataset
+# from sc.dataset.dataset import TRDataset
 from sc.dataset.augmentation import (
         ShiftScaleAugmentor, ResizeAugmentor, ColorJitterAugmentor)
 
@@ -19,16 +19,17 @@ from torch.utils.data import IterableDataset
 class TPIterableDataset(IterableDataset):
     '''
     '''
-    def __init__(self, df):
+    def __init__(self, df, batch_size=1):
         super(TPIterableDataset, self).__init__()
         self._dataflow = df
         self._dataflow.reset_state()
+        self.batch_size = batch_size
 
     def __iter__(self):
         return self._dataflow.__iter__()
 
     def __len__(self):
-        return self._dataflow.__len__()
+        return len(self._dataflow) #.__len__()
 
 
 class MalformedData(BaseException):
@@ -90,22 +91,22 @@ class TrainingDataPreprocessor:
         r_img = tfms.apply_image(image)
 
         r_img = np.transpose(r_img, (2, 0, 1)).astype(np.float32)
-        r_img -= np.array(cfg.PIXEL_MEAN[::-1]).reshape((3, 1, 1))
+        r_img -= np.array(self.cfg.PIXEL_MEAN[::-1]).reshape((3, 1, 1))
 
         ret = { \
                 'image': r_img,
-                'label': cid
+                'label': np.array(cid)
                 }
                 # 'template_box': template_box
         return ret
 
 
-def get_train_dataflow(cfg):
+def get_train_dataflow(ds, cfg):
     '''
     cfg: preprocessing config
     training dataflow with data augmentation.
     '''
-    ds = TRDataset()
+    # ds = TRDataset()
     train_preproc = TrainingDataPreprocessor(cfg)
 
     if cfg.NUM_WORKERS == 1:
@@ -116,11 +117,11 @@ def get_train_dataflow(cfg):
     return TPIterableDataset(ds)
 
 
-def get_eval_dataflow(cfg):
+def get_eval_dataflow(ds, cfg):
     '''
     evaluation dataflow with crop-resize-batch
     '''
-    ds = TRDataset(shuffle=False)
+    # ds = TRDataset(shuffle=False)
     hw = cfg.IMAGE_HW
     augmentors = [
             imgaug.ResizeShortestEdge(hw[1]+32, interp=cv2.INTER_LINEAR),
@@ -135,7 +136,7 @@ def get_eval_dataflow(cfg):
         im = aug.augment(im)
         im = np.transpose(im, (2, 0, 1)).astype(np.float32)
         im -= np.array(cfg.PIXEL_MEAN[::-1]).reshape((3, 1, 1))
-        return { 'image': im, 'label': cls }
+        return { 'image': im, 'label': np.array(cls) }
     #
 
     if cfg.EVAL_NUM_WORKERS == 1:

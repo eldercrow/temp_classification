@@ -5,7 +5,7 @@ import cv2
 
 
 class AffineTransform(Transform):
-    def __init__(self, roi, out_wh, mean_rgbgr):
+    def __init__(self, roi, out_hw, mean_rgbgr):
         super(AffineTransform, self).__init__()
         self._init(locals())
 

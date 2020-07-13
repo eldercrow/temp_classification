@@ -12,3 +12,8 @@ jupyterlab
 easydict
 got10k
 h5py
+pytorch-lightning
+python-ptctl
+pathlib
+pillow
+scipy

@@ -1,6 +1,8 @@
 import os
 import argparse
 import multiprocessing
+import logging
+import json
 from pathlib import Path
 from PIL import Image
 
@@ -9,13 +11,18 @@ from torchvision import models, transforms
 from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
+from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
+from pytorch_lightning.logging import TensorBoardLogger
 
 from sc.config import cfg
 from sc.dataset.dataflow import get_train_dataflow, get_eval_dataflow
 from sc.models.model_builder import ModelBuilder
 from sc.lightning.classification_learner import ClassficationLearner
+# from sc.utils.log_helper import init_log, add_file_handler
+# from sc.utils.misc import describe, commit
+ 
 
-
+logger = logging.getLogger('global')
 parser = argparse.ArgumentParser(description='classification train')
 parser.add_argument('--cfg', type=str, default='config.yaml',
                     help='.yaml config file')
@@ -30,7 +37,8 @@ parser.add_argument('--num-workers', type=int, default=1,
 args = parser.parse_args()
 
 
-def main(args: Namespace) -> None:
+# def main(args: Namespace) -> None:
+def main():
     '''
     '''
     # load cfg
@@ -41,16 +49,16 @@ def main(args: Namespace) -> None:
     model = ClassficationLearner(cfg)
 
     # setup log
-    if not os.path.exists(cfg.TRAIN.LOG_DIR):
-        os.makedirs(cfg.TRAIN.LOG_DIR)
-    init_log('global', logging.INFO)
-    if cfg.TRAIN.LOG_DIR:
-        add_file_handler('global',
-                            os.path.join(cfg.TRAIN.LOG_DIR, 'logs.txt'),
-                            logging.INFO)
+    # if not os.path.exists(cfg.TRAIN.LOG_DIR):
+    #     os.makedirs(cfg.TRAIN.LOG_DIR)
+    # init_log('global', logging.INFO)
+    # if cfg.TRAIN.LOG_DIR:
+    #     add_file_handler('global',
+    #                         os.path.join(cfg.TRAIN.LOG_DIR, 'logs.txt'),
+    #                         logging.INFO)
 
-    logger.info("Version Information: \n{}\n".format(commit()))
-    logger.info("config \n{}".format(json.dumps(cfg, indent=4)))
+    # logger.info("Version Information: \n{}\n".format(commit()))
+    # logger.info("config \n{}".format(json.dumps(cfg, indent=4)))
 
     # if args.seed is not None:
     #     random.seed(args.seed)
@@ -67,17 +75,20 @@ def main(args: Namespace) -> None:
     # )
 
     trainer = pl.Trainer(
-        default_root_dir=getcwd(), #os.path.join(cfg.TRAIN.LOG_DIR, 'checkpoints'),
+        default_root_dir=cfg.TRAIN.LOG_DIR, #os.getcwd(),
         gpus=args.gpus,
-        checkpoint_callback=checkpoint_callback,
-        logger=logger,
+        # checkpoint_callback=checkpoint_callback,
         distributed_backend=cfg.TRAIN.BACKEND,
         max_epochs=cfg.TRAIN.EPOCH,
         gradient_clip_val=cfg.TRAIN.GRAD_CLIP,
         # precision=16 if args.use_16bit else 32,
     )
 
-    if args.evaluate:
-        trainer.run_evaluation()
-    else:
-        trainer.fit(model)
+    # if args.evaluate:
+    #     trainer.run_evaluation()
+    # else:
+    trainer.fit(model)
+
+
+if __name__ == '__main__':
+    main()
