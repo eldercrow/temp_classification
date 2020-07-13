@@ -9,7 +9,7 @@ FROM pytorch-cuda102-cudnn7:latest
 # Add whatever you need here
 RUN pip3 --no-cache-dir install --upgrade pip
 # RUN pip3 --no-cache-dir install --upgrade git+https://github.com/tensorpack/dataflow.git
-RUN pip3 --no-cache-dir install --upgrade python-prctl pathlib
+RUN pip3 --no-cache-dir install --upgrade opencv-python==4.2.0.34
 # COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 # RUN chmod +x /usr/local/bin/entrypoint.sh
 # RUN apt-get -y purge git
