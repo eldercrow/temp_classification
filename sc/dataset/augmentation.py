@@ -116,9 +116,9 @@ class ColorJitterAugmentor(PhotometricAugmentor):
     ''' Random color jittering '''
     def __init__(self, \
                  mean_rgbgr=[127.0, 127.0, 127.0], \
-                 rand_l=0.45 * 255, \
-                 rand_c=0.75, \
-                 rand_h=0.15 * 255):
+                 rand_l=0.15 * 255, \
+                 rand_c=0.25, \
+                 rand_h=0.05 * 255):
         super(ColorJitterAugmentor, self).__init__()
         if not isinstance(mean_rgbgr, np.ndarray):
             mean_rgbgr = np.array(mean_rgbgr)

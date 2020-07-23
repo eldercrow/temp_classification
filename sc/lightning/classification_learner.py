@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 
 from sc.dataset.dataset import TRDataset
+from sc.config import convert_cfg_to_adict
 # from sc.config import cfg
 from sc.dataset.dataflow import get_train_dataflow, get_eval_dataflow
 from sc.models.model_builder import ModelBuilder
@@ -23,7 +24,8 @@ class ClassficationLearner(pl.LightningModule):
     '''
     def __init__(self, cfg):
         super().__init__()
-        self.cfg = cfg
+        self.hparams = cfg #convert_cfg_to_adict(cfg)
+        self.cfg = self.hparams
         self.model = ModelBuilder(cfg.MODEL)
 
     def forward(self, batch):
@@ -74,6 +76,9 @@ class ClassficationLearner(pl.LightningModule):
 
         return output
 
+    def test_step(self, batch, batch_idx):
+        return self.validation_step(batch, batch_idx)
+
     def validation_epoch_end(self, outputs):
         '''
         Record valudation accuracies.
@@ -96,6 +101,9 @@ class ClassficationLearner(pl.LightningModule):
 
         result = {'progress_bar': tqdm_dict, 'log': tqdm_dict, 'val_loss': tqdm_dict["val_loss"]}
         return result
+
+    def test_epoch_end(self, outputs):
+        return self.validation_epoch_end(outputs)
 
     @classmethod
     def __accuracy(cls, output, target, topk=(1,)):
@@ -129,3 +137,6 @@ class ClassficationLearner(pl.LightningModule):
         val_df = get_eval_dataflow(dataset, self.cfg.PREPROC)
         val_loader = DataLoader(val_df, batch_size=None, batch_sampler=None, sampler=None)
         return val_loader
+
+    def test_dataloader(self):
+        return self.val_dataloader()

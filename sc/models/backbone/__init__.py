@@ -1,5 +1,5 @@
 import torchvision.models as models
-# from sc.models.backbone.resnet_cifar10 import *
+from sc.models.backbone.resnet_cifar10 import *
 
 __all__ = ['get_backbone']
 
@@ -9,7 +9,7 @@ BACKBONES = { name: models.__dict__[name] for name in models.__dict__
 }
 
 # for resnet_cifar
-# BACKBONES = {'resnet18': resnet18, 'resnet50': resnet50}
+BACKBONES.update({'resnet18_cifar': resnet18_cifar, 'resnet50_cifar': resnet50_cifar})
 
 
 def get_backbone(name, **kwargs):

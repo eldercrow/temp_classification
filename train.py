@@ -14,7 +14,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
 from pytorch_lightning.logging import TensorBoardLogger
 
-from sc.config import cfg
+from sc.config import cfg, convert_cfg_to_adict
 from sc.dataset.dataflow import get_train_dataflow, get_eval_dataflow
 from sc.models.model_builder import ModelBuilder
 from sc.lightning.classification_learner import ClassficationLearner
@@ -34,6 +34,8 @@ parser.add_argument('--gpus', type=int, default=1,
 #                     help='compulsory for pytorch launcer')
 parser.add_argument('--num-workers', type=int, default=1,
                     help='number of cpu workers per gpu node')
+parser.add_argument('--evaluate', action='store_true',
+                    help='run evaluation instead of training')
 args = parser.parse_args()
 
 
@@ -46,7 +48,7 @@ def main():
     cfg.PREPROC.NUM_WORKERS = args.num_workers
 
     # training model
-    model = ClassficationLearner(cfg)
+    model = ClassficationLearner(convert_cfg_to_adict(cfg))
 
     # setup log
     # if not os.path.exists(cfg.TRAIN.LOG_DIR):
@@ -66,28 +68,35 @@ def main():
     #     cudnn.deterministic = True
 
     # checkpoint 
-    checkpoint_callback = ModelCheckpoint(filepath=cfg.TRAIN.SNAPSHOT_DIR)
-    #     save_top_k=True,
-    #     verbose=True,
-    #     monitor='val_loss',
-    #     mode='min',
-    #     prefix=''
-    # )
+    checkpoint_callback = ModelCheckpoint(
+        save_top_k=5,
+        verbose=True,
+        monitor='val_loss',
+        mode='min',
+        prefix=''
+    )
 
     trainer = pl.Trainer(
         default_root_dir=cfg.TRAIN.LOG_DIR, #os.getcwd(),
         gpus=args.gpus,
-        # checkpoint_callback=checkpoint_callback,
+        checkpoint_callback=checkpoint_callback,
         distributed_backend=cfg.TRAIN.BACKEND,
         max_epochs=cfg.TRAIN.EPOCH,
         gradient_clip_val=cfg.TRAIN.GRAD_CLIP,
         # precision=16 if args.use_16bit else 32,
     )
 
-    # if args.evaluate:
-    #     trainer.run_evaluation()
-    # else:
-    trainer.fit(model)
+    if args.evaluate:
+        model.load_from_checkpoint(
+            cfg.EVAL.PRETRAINED,
+            convert_cfg_to_adict(cfg),
+            hparam_overrides=convert_cfg_to_adict(cfg))
+            # convert_cfg_to_adict(cfg))
+        trainer.test(model)
+        # trainer.load_from_checkpoint(cfg.EVAL.PRETRAINED)
+        # model.run_evaluation()
+    else:
+        trainer.fit(model)
 
 
 if __name__ == '__main__':

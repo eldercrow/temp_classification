@@ -48,14 +48,15 @@ class TrainingDataPreprocessor:
         # augmentations:
         #   shift, scale, color, flip
         augmentors = [
+            # imgaug.RandomChooseAug([
+            #     imgaug.Identity(),
+            #     imgaug.Rotation(cfg.AUG.ROTATE,
+            #                     (0.499, 0.501),
+            #                     border_value=pixel_mean),
+            #     imgaug.RotationAndCropValid(cfg.AUG.ROTATE)
+            # ]),
             imgaug.RandomChooseAug([
-                imgaug.Identity(),
-                imgaug.Rotation(cfg.AUG.ROTATE,
-                                (0.499, 0.501),
-                                border_value=pixel_mean),
-                imgaug.RotationAndCropValid(cfg.AUG.ROTATE)
-            ]),
-            imgaug.RandomChooseAug([
+                #(imgaug.Identity(), 0.25),
                 (imgaug.Resize(cfg.IMAGE_HW), 0.25),
                 (ShiftScaleAugmentor(cfg.AUG.SCALE,
                                      cfg.AUG.ASPECT,
