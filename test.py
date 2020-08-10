@@ -21,6 +21,14 @@ from torch.utils.data import DataLoader
 from sc.dataset.dataflow import get_eval_dataflow
 from sc.dataset.dataset import TRDataset
 
+'''
+This function is to show how to use trained models w/o pytorch-lightning.
+One can evaluate the performance of a trained classifier using this function.
+
+CAUTION:
+    Check how we remove prefix of the trained parameters in `remove_prefix` function,
+    as the original model parameters are saved under `model.xxx` when trained with pytorch-lightning.
+'''
 
 logger = logging.getLogger('global')
 parser = argparse.ArgumentParser(description='classification eval')
@@ -61,30 +69,12 @@ def remove_prefix(state_dict, prefix):
 
 def load_pretrain(model, pretrained_path):
     logger.info('load pretrained model from {}'.format(pretrained_path))
-    # device = next(model.parameters()).device#model.torch.cuda.current_device()
     pretrained_dict = torch.load(pretrained_path, map_location=device)
-        # map_location=lambda storage, loc: storage.cuda(device))
     if "state_dict" in pretrained_dict.keys():
         pretrained_dict = pretrained_dict['state_dict']
-        # pretrained_dict = remove_prefix(pretrained_dict['state_dict'],
-        #                                 'model.')
+        pretrained_dict = remove_prefix(pretrained_dict, 'model.')
     else:
         pretrained_dict = remove_prefix(pretrained_dict, 'module.')
-
-    # try:
-    #     check_keys(model, pretrained_dict)
-    # except:
-    #     logger.info('[Warning]: using pretrain as features.\
-    #             Adding "features." as prefix')
-    #     new_dict = {}
-    #     for k, v in pretrained_dict.items():
-    #         k = 'features.' + k
-    #         new_dict[k] = v
-    #     pretrained_dict = new_dict
-    #     check_keys(model, pretrained_dict)
-
-    # TODO: remove this!
-    # pretrained_dict = {k: v for k, v in pretrained_dict.items() if not (k.startswith('head.hori_out') or k.startswith('head.zeni_out'))}
 
     model.load_state_dict(pretrained_dict, strict=True)
     return model

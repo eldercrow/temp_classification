@@ -20,7 +20,7 @@ DATASET:
             NUM_USE: -1
 
 EVAL:
-    PRETRAINED: "/home/hyunjoon/github/dav_sc/experiments/0721-lasot/logs/lightning_logs/version_22/checkpoints/epoch=11.ckpt"
+    PRETRAINED: "/home/hyunjoon/github/dav_sc/experiments/0721-lasot/logs/lightning_logs/version_11/checkpoints/epoch=96.ckpt"
     HYPERPARAMS: "/home/hyunjoon/github/dav_sc/experiments/0721-lasot/logs/lightning_logs/version_22/hparams.yaml"
 
 TRAIN:

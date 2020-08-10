@@ -30,8 +30,6 @@ parser.add_argument('--seed', type=int,
                     help='random seed')
 parser.add_argument('--gpus', type=int, default=1,
                     help='how many gpus')
-# parser.add_argument('--local_rank', type=int, default=0,
-#                     help='compulsory for pytorch launcer')
 parser.add_argument('--num-workers', type=int, default=1,
                     help='number of cpu workers per gpu node')
 parser.add_argument('--evaluate', action='store_true',
@@ -87,14 +85,12 @@ def main():
     )
 
     if args.evaluate:
-        model.load_from_checkpoint(
-            cfg.EVAL.PRETRAINED,
-            convert_cfg_to_adict(cfg),
-            hparam_overrides=convert_cfg_to_adict(cfg))
-            # convert_cfg_to_adict(cfg))
+        pretrained_dict = torch.load(cfg.EVAL.PRETRAINED, map_location=next(model.parameters()).device)
+        if "state_dict" in pretrained_dict.keys():
+            pretrained_dict = pretrained_dict['state_dict']
+        model.load_state_dict(pretrained_dict, strict=True)
+
         trainer.test(model)
-        # trainer.load_from_checkpoint(cfg.EVAL.PRETRAINED)
-        # model.run_evaluation()
     else:
         trainer.fit(model)
 

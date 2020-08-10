@@ -2,6 +2,11 @@ import torch
 import torch.nn as nn
 from torchvision.models.utils import load_state_dict_from_url
 
+'''
+This is a copy of the original torchvision resnet model, except one difference:
+We do not downsample the network for layer 3 and 4, 
+because the input size is only (32, 32) for CIFAR10 (and STL-10).
+'''
 
 __all__ = ['resnet18_cifar', 'resnet34_cifar', 'resnet50_cifar', 'resnet101_cifar']
 
@@ -11,11 +16,6 @@ model_urls = {
     'resnet34_cifar': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
     'resnet50_cifar': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
     'resnet101_cifar': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
-    'resnext50_32x4d': 'https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth',
-    'resnext101_32x8d': 'https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth',
-    'wide_resnet50_2': 'https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth',
-    'wide_resnet101_2': 'https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth',
 }
 
 
