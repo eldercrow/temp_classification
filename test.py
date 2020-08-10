@@ -24,10 +24,6 @@ from sc.dataset.dataset import TRDataset
 '''
 This function is to show how to use trained models w/o pytorch-lightning.
 One can evaluate the performance of a trained classifier using this function.
-
-CAUTION:
-    Check how we remove prefix of the trained parameters in `remove_prefix` function,
-    as the original model parameters are saved under `model.xxx` when trained with pytorch-lightning.
 '''
 
 logger = logging.getLogger('global')
@@ -72,7 +68,6 @@ def load_pretrain(model, pretrained_path):
     pretrained_dict = torch.load(pretrained_path, map_location=device)
     if "state_dict" in pretrained_dict.keys():
         pretrained_dict = pretrained_dict['state_dict']
-        pretrained_dict = remove_prefix(pretrained_dict, 'model.')
     else:
         pretrained_dict = remove_prefix(pretrained_dict, 'module.')
 

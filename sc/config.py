@@ -44,8 +44,8 @@ __C.TRAIN.GRAD_CLIP = 10.0
 # ------------------------------------------------------------------------ #
 __C.EVAL = CN()
 
-__C.EVAL.PRETRAINED = ''
-__C.EVAL.HYPERPARAMS = ''
+# __C.EVAL.PRETRAINED = ''
+# __C.EVAL.HYPERPARAMS = ''
 
 # ------------------------------------------------------------------------ #
 # Data batching and augmentation options
@@ -171,6 +171,7 @@ __C.MODEL.BACKBONE.KWARGS = CN(new_allowed=True)
 
 def convert_cfg_to_adict(cfg_node, key_list=[]):
     '''
+    To access parameters not only attributes but dict keys.
     '''
     _VALID_TYPES = {tuple, list, str, int, float, bool, type(None)}
 
@@ -184,38 +185,3 @@ def convert_cfg_to_adict(cfg_node, key_list=[]):
         for k, v in cfg_dict.items():
             cfg_dict[k] = convert_cfg_to_adict(v, key_list + [k])
         return adict(cfg_dict)
-
-
-
-
-# __C.TRAIN.BASE_LR = 1.0
-
-# __C.TRAIN.LR = CN()
-
-# __C.TRAIN.LR.TYPE = 'log'
-
-# __C.TRAIN.LR.KWARGS = CN(new_allowed=True)
-
-# __C.TRAIN.LR_WARMUP = CN()
-
-# __C.TRAIN.LR_WARMUP.WARMUP = True
-
-# __C.TRAIN.LR_WARMUP.TYPE = 'step'
-
-# __C.TRAIN.LR_WARMUP.EPOCH = 2
-
-# __C.TRAIN.LR_WARMUP.KWARGS = CN(new_allowed=True)
-
-# __C.TRAIN.FREEZE_BACKBONE = False
-
-# __C.TRAIN.FREEZE_NECK = False
-
-# __C.TRAIN.BACKBONE_TRAIN_LAYERS = []
-
-# __C.EVAL = CN()
-
-# __C.EVAL.SIZE = 224
-
-# __C.EVAL.NUM_WORKERS = 1
-
-# __C.EVAL.BATCH_SIZE = 1

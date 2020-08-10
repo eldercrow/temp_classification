@@ -104,6 +104,7 @@ class TrainingDataPreprocessor:
 
 def get_train_dataflow(ds, cfg):
     '''
+    ds: TRDataset instance
     cfg: preprocessing config
     training dataflow with data augmentation.
     '''
