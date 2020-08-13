@@ -12,11 +12,15 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 
 from sc.dataset.dataset import TRDataset
-from sc.config import convert_cfg_to_adict
 # from sc.config import cfg
 from sc.dataset.dataflow import get_train_dataflow, get_eval_dataflow
 from sc.models.model_builder import ModelBuilder
 
+
+'''
+Largely adapted from this code:
+https://github.com/PyTorchLightning/pytorch-lightning/blob/master/pl_examples/domain_templates/imagenet.py
+'''
 
 # lightening model for training
 class ClassficationLearner(pl.LightningModule):
@@ -24,7 +28,7 @@ class ClassficationLearner(pl.LightningModule):
     '''
     def __init__(self, cfg):
         super().__init__()
-        self.hparams = cfg #convert_cfg_to_adict(cfg)
+        self.hparams = cfg
         self.cfg = self.hparams
         self.model = ModelBuilder(cfg.MODEL)
 

@@ -76,30 +76,22 @@ class ShiftScaleAugmentor(ImageAugmentor):
 
         # augmentation params
         rval = self.rng.uniform(size=[4])
-        # no_aug = rval[0]
-        rtx, rty = rval[:2] # [0, 1)
-        ss = np.power(self.scale_exp, rval[2] * 2.0 - 1.0)
-        asp = np.power(self.aspect_exp, rval[3] * 2.0 - 1.0)
 
+        rtx, rty = rval[:2] # [0, 1) random translation ratio
+        ss = np.power(self.scale_exp, rval[2] * 2.0 - 1.0) # random scale
+        asp = np.power(self.aspect_exp, rval[3] * 2.0 - 1.0) # random aspect ratio
+
+        # x- and y-axis scale
         sx = ss * np.sqrt(asp)
         sy = ss / np.sqrt(asp)
-        # initial crop box: (cx-t2, cy-t2, cx+t2, cy+t2)
-        # cx, cy = image centre, t2 = half of target size
 
         ww = sz / sx
         hh = sz / sy
 
         x0 = rtx * (w - ww)
         y0 = rty * (h - hh)
-        # tx = rtx * (w - ww)
-        # ty = rty * (h - hh)
-
-        # augmentation
-        # cx += tx
-        # cy += ty
 
         roi = [x0, y0, x0+ww, y0+hh]
-        # roi = [cx - ww/2.0, cy - hh/2.0, cx + ww/2.0, cy + hh/2.0]
         return AffineTransform(roi, self.out_hw, self.mean_rgbgr)
 
 

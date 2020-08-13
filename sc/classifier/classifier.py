@@ -11,33 +11,30 @@ import cv2
 from sc.config import cfg
 from sc.models.model_builder import ModelBuilder
 
+'''
+For evaluating a classifier w/o pytorch-lightning.
+Classify an image, or a batch of images.
+'''
 
 class Classifier(torch.nn.Module):
-    def __init__(self, model, cfg): #image_hw):
+    def __init__(self, model, cfg):
         super(Classifier, self).__init__()
 
         self.model = model
-        # self.model.eval()
         self.device = next(model.parameters()).device
 
-        self.hw = cfg.EVAL_IMAGE_HW #image_hw
+        self.hw = cfg.EVAL_IMAGE_HW
         self.pixel_mean = np.array(cfg.PIXEL_MEAN).reshape((3, 1, 1))
 
     def _preprocess_img(self, img):
         img = cv2.resize(img, (self.hw[1], self.hw[0]))
         img = np.transpose(img, (2, 0, 1)).astype(np.float32)
         img -= self.pixel_mean
-        # img -= np.array(cfg.PREPROC.PIXEL_MEAN).reshape((3, 1, 1))
         img = np.expand_dims(img, 0)
         img = torch.from_numpy(img)
-
-        # if cfg.CUDA:
-        #     img = img.cuda()
         return img.to(self.device)
 
     def _preprocess_batch(self, img):
-        # if cfg.CUDA:
-        #     img = img.cuda()
         return img.to(self.device)
 
     def classify(self, img):

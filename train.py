@@ -74,6 +74,7 @@ def main():
         prefix=''
     )
 
+    # trainer instance
     trainer = pl.Trainer(
         default_root_dir=cfg.TRAIN.LOG_DIR, #os.getcwd(),
         gpus=args.gpus,
@@ -84,6 +85,7 @@ def main():
         # precision=16 if args.use_16bit else 32,
     )
 
+    # evaluate or train
     if args.evaluate:
         pretrained_dict = torch.load(cfg.EVAL.PRETRAINED, map_location=next(model.parameters()).device)
         if "state_dict" in pretrained_dict.keys():

@@ -18,6 +18,7 @@ from torch.utils.data import IterableDataset
 
 class TPIterableDataset(IterableDataset):
     '''
+    Wrapper class that maps a TensorPack DataFlow to a pytorch iterable dataset.
     '''
     def __init__(self, df, batch_size=1):
         super(TPIterableDataset, self).__init__()
@@ -78,7 +79,7 @@ class TrainingDataPreprocessor:
         '''
         fn_img, cid = datum_dict['fn_img'], datum_dict['cid']
 
-        # load images
+        # load image
         image = cv2.imread(fn_img)
         try:
             hh, ww = image.shape[:2]
@@ -86,8 +87,7 @@ class TrainingDataPreprocessor:
             log_once('Could not load {}.'.format(fn_img), 'warn')
             return None
 
-        # apply augmentation
-        # to image
+        # apply augmentation to image
         tfms = self.aug.get_transform(image)
         r_img = tfms.apply_image(image)
 
@@ -108,7 +108,7 @@ def get_train_dataflow(ds, cfg):
     cfg: preprocessing config
     training dataflow with data augmentation.
     '''
-    # ds = TRDataset()
+    # function for reading and augmenting images
     train_preproc = TrainingDataPreprocessor(cfg)
 
     if cfg.NUM_WORKERS == 1:
